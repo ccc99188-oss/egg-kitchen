@@ -131,6 +131,42 @@ h1{margin:0;font-size:36px;color:#e8743b;text-shadow:3px 3px 0 #fff}
 .heart{position:absolute;font-size:38px;animation:rise 1.7s ease-out forwards;pointer-events:none;z-index:4}
 @keyframes rise{0%{transform:translateY(0) scale(.4);opacity:0}20%{opacity:1}100%{transform:translateY(-170px) scale(1.2);opacity:0}}
 #result{display:none}
+
+/* 螢幕比較矮的時候（筆電），整個畫面縮小，讓托盤不用捲動就看得到 */
+@media (max-height:800px){
+  header{padding:4px 12px}
+  h1{font-size:28px}
+  .icon-btn{width:46px;height:46px;font-size:22px}
+  .dish-name{font-size:17px}
+  .say{font-size:22px;padding:7px 16px;margin:2px auto}
+  .stage{height:240px}
+  .stage>.ware{zoom:.7}
+  .dots{font-size:20px;height:24px}
+  .hint{font-size:17px;height:24px}
+  .tray{min-height:100px;padding:2px}
+  .tool{width:86px;height:96px}
+  .tool .ico{font-size:44px;height:54px}
+  .tool b{font-size:17px}
+  .dial{width:74px;height:74px}
+  .meter{height:36px;margin-bottom:8px}
+  .action{font-size:28px;padding:10px 30px}
+  #feed{height:250px}
+  #feedPlate .plate{zoom:.8}
+  #cat{zoom:.78}
+  .cushion{width:180px;height:38px;margin-top:-28px}
+  #catbox{height:240px}
+  .stars{font-size:40px;margin:0}
+  .msg{font-size:24px}
+}
+@media (max-height:620px){
+  .stage{height:205px}
+  .stage>.ware{zoom:.6}
+  #feed{height:215px}
+  #feedPlate .plate{zoom:.7}
+  #cat{zoom:.66}
+  #catbox{height:205px}
+  .hello{font-size:22px;margin:2px 0 8px}
+}
 .row{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
 .row .action{margin:0;animation:none}
 .conf{position:fixed;top:-50px;font-size:34px;animation:fall 2.8s linear forwards;pointer-events:none;z-index:9}
