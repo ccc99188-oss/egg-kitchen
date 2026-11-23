@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAY的小遊戲</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{margin:0;font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif;color:#5a3d2b;min-height:100vh;
+  background:repeating-conic-gradient(#ffe2c2 0 25%,#fff4e6 0 50%) 0 0/64px 64px}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
+h1{margin:0;font-size:36px;color:#e8743b;text-shadow:3px 3px 0 #fff}
+.icon-btn{font-size:28px;background:#fff;border:3px solid #f0b27a;border-radius:16px;width:58px;height:58px;cursor:pointer}
+.screen{display:none;padding:6px 16px 30px;max-width:900px;margin:0 auto}
+.screen.on{display:block}
+.hello{text-align:center;font-size:28px;font-weight:bold;margin:6px 0 14px;background:#fffc;border-radius:20px;padding:8px}
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px}
+.card{background:#fff;border:4px solid #f6c28b;border-radius:28px;padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;font-size:30px;font-weight:bold;box-shadow:0 6px 0 #f0a868;transition:transform .1s}
+.card:hover{transform:translateY(-3px)}
+.card:active{transform:translateY(4px);box-shadow:0 2px 0 #f0a868}
+.card .best{font-size:20px;color:#b07a4f;font-weight:normal;min-height:26px}
+.mini{width:108px;height:108px;position:relative}
+.mini>.plate{position:absolute;left:0;top:0;transform:scale(.45);transform-origin:0 0}
+
+.dish-name{text-align:center;font-size:22px;color:#b07a4f;font-weight:bold}
+.say{background:#fff;border-radius:24px;padding:14px 20px;font-size:30px;font-weight:bold;text-align:center;border:4px solid #8fd3a8;margin:6px auto 4px;max-width:660px;cursor:pointer}
+.stage{height:345px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.ware{position:relative}
+.dots{text-align:center;font-size:28px;height:36px;letter-spacing:6px;color:#ff8a4c}
+.action{display:block;margin:6px auto 0;font-size:36px;font-weight:bold;padding:16px 40px;border-radius:999px;border:none;background:#ff8a4c;color:#fff;box-shadow:0 7px 0 #d9622a;cursor:pointer;animation:pulse 1.2s infinite;min-width:250px;font-family:inherit}
+.action:active{transform:translateY(5px);box-shadow:0 2px 0 #d9622a}
+.action:disabled{background:#c9b8a8;box-shadow:0 7px 0 #a8968a;animation:none;cursor:default}
+.action.alt{background:#5fb8e8;box-shadow:0 7px 0 #3a8fc0}
+@keyframes pulse{50%{transform:scale(1.06)}}
+.bump{animation:bump .3s}
+@keyframes bump{30%{transform:rotate(-6deg) scale(1.05)}70%{transform:rotate(5deg)}}
+
+.meter{position:relative;height:44px;max-width:540px;margin:2px auto 14px;border-radius:22px;overflow:hidden;display:flex;border:4px solid #fff;box-shadow:0 0 0 3px #e0c4a8}
+.meter>div:not(.needle){display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:bold}
+.needle{position:absolute;top:0;bottom:0;width:8px;background:#5a3d2b;border-radius:4px;left:-4px}
+.wait{height:26px;max-width:420px;margin:2px auto 14px;background:#fff;border-radius:13px;overflow:hidden;border:3px solid #e0c4a8}
+.wait>div{height:100%;width:0;background:#8fd3a8}
+
+/* 平底鍋 */
+.pan{width:250px;height:250px;border-radius:50%;background:radial-gradient(circle at 45% 40%,#5d5d5d,#2a2a2a 70%);border:12px solid #1d1d1d;position:relative;margin-right:120px}
+.pan::after{content:"";position:absolute;left:100%;top:50%;width:120px;height:30px;margin-left:10px;transform:translateY(-50%);background:linear-gradient(#8b5a2b,#5e3a17);border-radius:15px}
+.hot{box-shadow:0 0 0 6px rgba(255,140,0,.35),0 0 40px 18px rgba(255,100,0,.45)}
+.flames{position:absolute;left:0;bottom:-36px;text-align:center;font-size:30px;animation:flick .25s infinite alternate}
+@keyframes flick{to{transform:scaleY(1.15) translateY(-3px)}}
+.oil{position:absolute;inset:30px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(255,240,150,.6),rgba(255,215,90,.2) 60%,transparent 75%)}
+
+/* 荷包蛋 */
+.fe{position:absolute;transform:translate(-50%,-50%)}
+.fe .white{width:160px;height:140px;border-radius:52% 48% 46% 54%/56% 44% 56% 44%;background:#fff;box-shadow:inset 0 0 8px 3px #f3d9a0}
+.fe .yolk{position:absolute;left:50%;top:48%;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0 0 12%,#ffb300 32%,#ff9800)}
+.fe.raw .white{background:rgba(255,255,255,.4);box-shadow:none}
+.fe.full .yolk{background:radial-gradient(circle at 35% 30%,#ffe9a0,#f6c445)}
+.fe.burnt .white{box-shadow:inset 0 0 24px 16px #5b3412}
+.fe.burnt .yolk{background:#c9962a}
+.fe.sm{transform:translate(-50%,-50%) scale(.6)}
+
+/* 碗 */
+.bowl{width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,#fff 0 50%,#cfe6ff 78%);border:12px solid #7fb8ea;position:relative;overflow:hidden;box-shadow:0 8px 0 #5c97cc}
+.bowl.sm{width:150px;height:150px;border-width:8px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:0 4px 8px rgba(0,0,0,.3)}
+.beaten{position:absolute;inset:20px;border-radius:50%}
+.bowl.sm .beaten{inset:12px}
+.beaten.set{background:radial-gradient(circle at 40% 35%,#fff8d0,#ffe08a 70%,#f8cf62)}
+.scal{position:absolute;width:10px;height:10px;border-radius:50%;background:#5cb85c;border:2px solid #3e8e3e}
+
+/* 炒蛋 */
+.liquid{position:absolute;inset:38px;border-radius:48% 52% 50% 50%;background:rgba(255,200,40,.92)}
+.curd{position:absolute;width:46px;height:36px;transform:translate(-50%,-50%) rotate(var(--r));background:radial-gradient(circle at 40% 35%,#fff3a6,#ffd54f 60%,#f2b632);border-radius:45% 55% 40% 60%/55% 40% 60% 45%}
+
+/* 湯鍋 */
+.pot{width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,#eef2f4,#b8c5cc);border:14px solid #8a9ba5;position:relative}
+.pot::before,.pot::after{content:"";position:absolute;top:50%;width:46px;height:28px;margin-top:-14px;background:#444;border-radius:12px}
+.pot::before{right:100%;margin-right:8px}
+.pot::after{left:100%;margin-left:8px}
+.water{position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#dff3ff,#79c3f2);overflow:hidden}
+.bub{position:absolute;width:20px;height:20px;border-radius:50%;border:3px solid rgba(255,255,255,.95);animation:bub .9s infinite;transform:scale(0)}
+@keyframes bub{0%{transform:scale(.2);opacity:1}80%{transform:scale(1.2);opacity:1}100%{transform:scale(1.5);opacity:0}}
+.shell{position:absolute;width:58px;height:74px;transform:translate(-50%,-50%) rotate(var(--r));border-radius:50%/60% 60% 40% 40%;background:radial-gradient(circle at 35% 30%,#fff,#f5e6d0 70%,#e8cfae);box-shadow:0 3px 5px rgba(0,0,0,.25)}
+.lid{position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(255,255,255,.9),rgba(205,218,226,.92) 60%,rgba(150,170,180,.95));border:6px solid #8a9ba5;z-index:3}
+.knob{position:absolute;left:50%;top:50%;width:60px;height:60px;margin:-30px;border-radius:50%;background:#5a3d2b;box-shadow:inset 0 -6px 0 #3e2a1d}
+.steam{position:absolute;font-size:44px;animation:steam 1.8s infinite;z-index:4;opacity:0}
+@keyframes steam{0%{transform:translateY(0) scale(.6);opacity:0}30%{opacity:.95}100%{transform:translateY(-130px) scale(1.4);opacity:0}}
+
+/* 剝殼 */
+.board{width:310px;height:240px;background:linear-gradient(#e2b47c,#c98f4f);border-radius:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 0 #a26d35}
+.bigegg{width:150px;height:190px;border-radius:50%/60% 60% 40% 40%;position:relative;overflow:hidden;background:radial-gradient(circle at 38% 30%,#fff,#f7f3ee 70%,#e6dfd6);box-shadow:0 8px 10px rgba(0,0,0,.25)}
+.slice{position:absolute;top:0;bottom:0;width:21%;background:radial-gradient(circle at 50% 30%,#f2d3a6,#d6a466);border-right:3px dashed #b48a5a}
+
+/* 盤子 */
+.plate{width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,#fff 0 56%,#ececec 59%,#fff 70%,#e3e3e3);box-shadow:0 8px 0 #d8cfc4,0 12px 20px rgba(0,0,0,.15);position:relative}
+.bhalf{position:absolute;width:80px;height:104px;border-radius:50%/60% 60% 40% 40%;background:#fff;box-shadow:0 3px 5px rgba(0,0,0,.2);transform:translate(-50%,-50%) rotate(var(--r))}
+.bhalf::after{content:"";position:absolute;left:50%;top:52%;width:44px;height:44px;margin:-22px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe58a,#ffbf2e)}
+
+.stars{text-align:center;font-size:56px;color:#ffb300;margin-top:6px}
+.msg{text-align:center;font-size:32px;font-weight:bold;margin:4px 0}
+/* 小貓咪 */
+#feed{display:flex;justify-content:center;align-items:center;gap:90px;height:330px;position:relative}
+#feedPlate{cursor:grab;touch-action:none;position:relative;z-index:5}
+#feedPlate.wiggle{animation:invite 1.4s infinite}
+#feedPlate.dragging{cursor:grabbing;filter:drop-shadow(0 14px 12px rgba(0,0,0,.25))}
+#catbox{position:relative;width:250px;height:290px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+#cat{width:220px;height:264px;cursor:pointer;position:relative;z-index:2;transition:transform .2s;transform-origin:50% 100%}
+#cat svg{width:100%;height:100%;overflow:visible;display:block}
+#cat .v{display:none}
+#cat[data-mood=idle]  .eyes-open, #cat[data-mood=idle]  .mouth-smile,
+#cat[data-mood=smell] .eyes-happy,#cat[data-mood=smell] .mouth-open,
+#cat[data-mood=chew]  .eyes-happy,#cat[data-mood=chew]  .mouth-chew,
+#cat[data-mood=love]  .eyes-heart,#cat[data-mood=love]  .mouth-open,
+#cat[data-mood=happy] .eyes-happy,#cat[data-mood=happy] .mouth-smile{display:inline}
+#cat .tail{transform-origin:150px 205px;animation:wag 1.6s ease-in-out infinite}
+#cat[data-mood=love] .tail,#cat[data-mood=happy] .tail,#cat[data-mood=smell] .tail{animation-duration:.45s}
+@keyframes wag{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(14deg)}}
+#cat .blink{transform-origin:100px 92px;animation:blink 4s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+#cat .mouth-chew ellipse{transform-origin:100px 121px;animation:munch .3s infinite}
+@keyframes munch{50%{transform:scaleY(.3)}}
+#cat .ear-l{transform-origin:70px 60px;animation:ear 3s infinite}
+@keyframes ear{0%,90%,100%{transform:rotate(0)}95%{transform:rotate(-12deg)}}
+#catbox.over #cat{transform:scale(1.12)}
+#cat.chew{animation:chew .3s infinite}
+#cat.happy{animation:hop .45s 4}
+@keyframes chew{50%{transform:scaleY(.9) scaleX(1.05)}}
+@keyframes hop{50%{transform:translateY(-30px) rotate(-5deg)}}
+.cushion{width:230px;height:48px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#f8bbd0,#f48fb1);margin-top:-36px;box-shadow:0 6px 0 #d86c93}
+#bubble{position:absolute;top:-6px;right:-70px;background:#fff;border-radius:22px;padding:8px 16px;font-size:24px;font-weight:bold;border:3px solid #f6c28b;white-space:nowrap;z-index:3;display:none}
+#bubble::after{content:"";position:absolute;left:22px;bottom:-14px;border:8px solid transparent;border-top-color:#f6c28b}
+.heart{position:absolute;font-size:38px;animation:rise 1.7s ease-out forwards;pointer-events:none;z-index:4}
+@keyframes rise{0%{transform:translateY(0) scale(.4);opacity:0}20%{opacity:1}100%{transform:translateY(-170px) scale(1.2);opacity:0}}
+#result{display:none}
+.row{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+.row .action{margin:0;animation:none}
+.conf{position:fixed;top:-50px;font-size:34px;animation:fall 2.8s linear forwards;pointer-events:none;z-index:9}
+@keyframes fall{to{transform:translateY(115vh) rotate(540deg)}}
+
+/* ---------- 滑鼠互動 ---------- */
+.hint{text-align:center;font-size:22px;font-weight:bold;color:#e8743b;height:30px}
+.stage{touch-action:none}
+.tray{display:flex;gap:22px;justify-content:center;align-items:flex-end;min-height:130px;padding:6px;touch-action:none}
+.tool{width:108px;height:120px;border-radius:26px;background:#fff;border:4px dashed #f0b27a;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:grab;touch-action:none;animation:invite 1.4s infinite}
+.tool .ico{font-size:58px;line-height:1.1;display:flex;align-items:center;justify-content:center;height:70px}
+.tool b{font-size:20px}
+.tool.still{animation:none;cursor:default;border-style:solid;opacity:.85}
+@keyframes invite{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+.ghost{position:fixed;z-index:50;pointer-events:none;margin:0;animation:none;transform:scale(1.15) rotate(-8deg);box-shadow:0 12px 20px rgba(0,0,0,.25);cursor:grabbing}
+.ware.over>:first-child{outline:7px dashed #5fc98a;outline-offset:12px}
+.minilid{width:66px;height:66px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#cdd9e0 60%,#98aab4);border:4px solid #8a9ba5;position:relative}
+.minilid::after{content:"";position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px;border-radius:50%;background:#5a3d2b}
+.knob-ctl{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:grab;touch-action:none}
+.knob-ctl b{font-size:20px}
+.dial{width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#cfcfcf);border:6px solid #777;position:relative;box-shadow:0 5px 0 #555}
+.dial::after{content:"";position:absolute;left:50%;top:6px;width:14px;height:36px;margin-left:-7px;background:#e53935;border-radius:7px}
+.knob-ctl:not(.on) .dial{animation:invite 1.4s infinite}
+#cursorTool{position:fixed;z-index:60;pointer-events:none;font-size:72px;display:none;transform:translate(-25%,-75%) rotate(10deg);transition:transform .1s}
+#cursorTool.down{transform:translate(-25%,-70%) rotate(-25deg) scale(.92)}
+.stage.rubbing{cursor:none}
+.stage.active .ware{animation:jig .25s infinite}
+@keyframes jig{25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}
+.stage.tappable{cursor:pointer}
+.stage.tappable .ware>:first-child{animation:tapme 1s infinite}
+@keyframes tapme{50%{outline:7px dashed #5fc98a;outline-offset:12px}}
+</style>
+</head>
+<body>
+<header>
+  <button class="icon-btn" id="homeBtn" title="回到菜單">🏠</button>
+  <h1>🐣 MAY的小遊戲</h1>
+  <button class="icon-btn" id="voice" title="聲音開關">🔊</button>
+</header>
+
+<section class="screen on" id="menu">
+  <p class="hello">小廚師，今天想煮什麼蛋呢？</p>
+  <div class="menu" id="cards"></div>
+</section>
+
+<section class="screen" id="cook">
+  <div class="dish-name" id="dishName"></div>
+  <div class="say" id="say" title="再聽一次"></div>
+  <div class="stage" id="stage"></div>
+  <div class="dots" id="dots"></div>
+  <div class="meter" id="meter">
+    <div style="flex:35;background:#e0e0e0">還沒熟</div>
+    <div style="flex:35;background:#8fd3a8">⭐ 半熟</div>
+    <div style="flex:20;background:#ffe082">全熟</div>
+    <div style="flex:10;background:#ff8a80">焦</div>
+    <div class="needle" id="needle"></div>
+  </div>
+  <div class="wait" id="wait"><div></div></div>
+  <div class="hint" id="hint"></div>
+  <div class="tray" id="tray"></div>
+  <button class="action" id="action">🍳 起鍋！</button>
+</section>
+<div id="cursorTool"></div>
+
+<section class="screen" id="done">
+  <div class="say" id="feedSay"></div>
+  <div id="feed">
+    <div id="feedPlate"></div>
+    <div id="catbox">
+      <div id="bubble"></div>
+      <div id="cat" data-mood="idle">
+        <svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+          <!-- 尾巴 -->
+          <g class="tail">
+            <path d="M150 205 C190 200 196 160 178 130 C172 120 160 124 166 134 C178 156 172 186 145 192 Z" fill="#ffb74d" stroke="#e08a2c" stroke-width="3"/>
+            <path d="M176 140 l-10 4 M180 160 l-11 1 M174 180 l-9 -3" stroke="#f57c00" stroke-width="5" stroke-linecap="round"/>
+          </g>
+          <!-- 身體 -->
+          <ellipse cx="100" cy="178" rx="58" ry="56" fill="#ffb74d" stroke="#e08a2c" stroke-width="3"/>
+          <path d="M48 160 q10 4 14 -2 M46 182 q10 4 14 -2 M152 160 q-10 4 -14 -2 M154 182 q-10 4 -14 -2" stroke="#f57c00" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="100" cy="188" rx="32" ry="40" fill="#fff3e0"/>
+          <!-- 前腳 -->
+          <ellipse cx="76" cy="228" rx="18" ry="12" fill="#ffb74d" stroke="#e08a2c" stroke-width="3"/>
+          <ellipse cx="124" cy="228" rx="18" ry="12" fill="#ffb74d" stroke="#e08a2c" stroke-width="3"/>
+          <path d="M70 224 v8 M78 224 v8 M118 224 v8 M126 224 v8" stroke="#e08a2c" stroke-width="2" stroke-linecap="round"/>
+          <!-- 耳朵 -->
+          <g class="ear-l">
+            <path d="M46 78 L52 22 L92 52 Z" fill="#ffb74d" stroke="#e08a2c" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M56 64 L59 36 L80 52 Z" fill="#f8a5c2"/>
+          </g>
+          <path d="M154 78 L148 22 L108 52 Z" fill="#ffb74d" stroke="#e08a2c" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M144 64 L141 36 L120 52 Z" fill="#f8a5c2"/>
+          <!-- 頭 -->
+          <ellipse cx="100" cy="95" rx="64" ry="55" fill="#ffb74d" stroke="#e08a2c" stroke-width="3"/>
+          <path d="M100 44 v16 M86 46 l3 13 M114 46 l-3 13" stroke="#f57c00" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="100" cy="116" rx="26" ry="18" fill="#fff3e0"/>
+          <circle cx="62" cy="110" r="10" fill="#ff8fab" opacity=".55"/>
+          <circle cx="138" cy="110" r="10" fill="#ff8fab" opacity=".55"/>
+          <!-- 眼睛：張開 -->
+          <g class="v eyes-open"><g class="blink">
+            <ellipse cx="78" cy="92" rx="9" ry="11" fill="#3b2a20"/>
+            <ellipse cx="122" cy="92" rx="9" ry="11" fill="#3b2a20"/>
+            <circle cx="81" cy="88" r="3.5" fill="#fff"/><circle cx="125" cy="88" r="3.5" fill="#fff"/>
+          </g></g>
+          <!-- 眼睛：笑瞇瞇 -->
+          <g class="v eyes-happy" stroke="#3b2a20" stroke-width="5" fill="none" stroke-linecap="round">
+            <path d="M68 95 Q78 82 88 95"/><path d="M112 95 Q122 82 132 95"/>
+          </g>
+          <!-- 眼睛：愛心 -->
+          <g class="v eyes-heart" fill="#ff4d6d">
+            <path d="M78 102 L67 90 A6 6 0 0 1 78 84 A6 6 0 0 1 89 90 Z"/>
+            <path d="M122 102 L111 90 A6 6 0 0 1 122 84 A6 6 0 0 1 133 90 Z"/>
+          </g>
+          <!-- 鼻子 -->
+          <path d="M94 106 h12 l-6 7 z" fill="#ff7aa2"/>
+          <!-- 嘴巴 -->
+          <path class="v mouth-smile" d="M88 116 Q94 124 100 116 Q106 124 112 116" stroke="#3b2a20" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <g class="v mouth-open">
+            <path d="M90 116 Q100 140 110 116 Z" fill="#c2185b" stroke="#3b2a20" stroke-width="3" stroke-linejoin="round"/>
+            <ellipse cx="100" cy="127" rx="6" ry="4" fill="#ff8fab"/>
+          </g>
+          <g class="v mouth-chew"><ellipse cx="100" cy="121" rx="8" ry="6" fill="#c2185b" stroke="#3b2a20" stroke-width="3"/></g>
+          <!-- 鬍鬚 -->
+          <g stroke="#7a5236" stroke-width="2" stroke-linecap="round">
+            <path d="M70 112 L36 106 M70 118 L36 120 M130 112 L164 106 M130 118 L164 120"/>
+          </g>
+        </svg>
+      </div>
+      <div class="cushion"></div>
+    </div>
+  </div>
+  <div class="hint" id="feedHint">👆 按住盤子，拖到小貓咪那裡！</div>
+  <div id="result">
+    <div class="stars" id="stars"></div>
+    <div class="msg" id="msg"></div>
+    <div class="row">
+      <button class="action" id="again">🔁 再煮一次</button>
+      <button class="action alt" id="other">📖 換一道菜</button>
+    </div>
+  </div>
+</section>
+
+<script>
+const $ = s => document.querySelector(s);
+
+/* ---------- 聲音 ---------- */
+let voiceOn = true, ac = null;
+function audio(){ if(!ac) ac = new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); return ac; }
+function tone(f1,f2,dur,type='sine',vol=.25,delay=0){
+  const a=audio(), t=a.currentTime+delay, o=a.createOscillator(), g=a.createGain();
+  o.type=type; o.frequency.setValueAtTime(f1,t); o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.02);
+}
+function noise(dur,freq,type='highpass',vol=.2){
+  const a=audio(), len=a.sampleRate*dur, b=a.createBuffer(1,len,a.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+  const s=a.createBufferSource(); s.buffer=b;
+  const f=a.createBiquadFilter(); f.type=type; f.frequency.value=freq;
+  const g=a.createGain(); g.gain.value=vol;
+  s.connect(f).connect(g).connect(a.destination); s.start();
+}
+const SFX = {
+  pop:   ()=>tone(500,900,.12),
+  crack: ()=>{ tone(1400,300,.06,'square',.1); noise(.1,2500); },
+  sizzle:()=>noise(.7,3000,'highpass',.16),
+  splash:()=>noise(.5,900,'lowpass',.4),
+  stir:  ()=>tone(320,520,.09,'triangle',.22),
+  fire:  ()=>noise(.45,500,'bandpass',.4),
+  ding:  ()=>[784,988,1175,1568].forEach((f,i)=>tone(f,f*1.01,.3,'triangle',.2,i*.12)),
+  sad:   ()=>tone(500,220,.6,'sawtooth',.08),
+  pick:  ()=>tone(400,650,.1,'sine',.15),
+  meow:  ()=>{ tone(650,1050,.14,'triangle',.18); tone(1050,560,.38,'triangle',.18,.14); },
+  munch: ()=>{ noise(.09,1200,'bandpass',.5); setTimeout(()=>noise(.07,900,'bandpass',.4),130); },
+  purr:  ()=>{
+    const a=audio(), t=a.currentTime, o=a.createOscillator(), g=a.createGain(), l=a.createOscillator(), lg=a.createGain();
+    o.type='sawtooth'; o.frequency.value=55; l.frequency.value=24; lg.gain.value=.07;
+    l.connect(lg).connect(g.gain); g.gain.setValueAtTime(.07,t); g.gain.linearRampToValueAtTime(0,t+1.6);
+    o.connect(g).connect(a.destination); o.start(t); l.start(t); o.stop(t+1.6); l.stop(t+1.6);
+  }
+};
+function say(text){
+  if(!voiceOn || !window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.replace(/[^一-鿿，。！？、…]/g,''));
+  u.lang='zh-TW'; u.rate=.9; u.pitch=1.2;
+  const vs=speechSynthesis.getVoices();
+  const v=vs.find(v=>/zh[-_]TW/i.test(v.lang)) || vs.find(v=>/zh/i.test(v.lang));
+  if(v) u.voice=v;
+  speechSynthesis.speak(u);
+}
+
+/* ---------- 畫圖小幫手 ---------- */
+const wrap   = h => `<div class="ware">${h}</div>`;
+
+function pan(inner='', o={}){
+  return `<div class="ware"><div class="pan ${o.hot?'hot':''}">${o.oil?'<div class="oil"></div>':''}${inner}</div>${o.hot?'<div class="flames" style="right:120px">🔥🔥🔥</div>':''}</div>`;
+}
+const egg = (lv,x=50,y=50,cls='') => `<div class="fe ${lv} ${cls}" style="left:${x}%;top:${y}%"><div class="white"></div><div class="yolk"></div></div>`;
+const bowl = (inner,sm) => `<div class="bowl ${sm?'sm':''}">${inner}</div>`;
+const rawEggs = n => [[38,44],[62,57]].slice(0,n).map(p=>egg('raw',p[0],p[1],'sm')).join('');
+const beaten = (m,color='#ffc93c') => `<div class="beaten" style="opacity:${m};background:${color}"></div>`;
+const custard = () => `<div class="beaten set"></div>` + [[40,38],[58,45],[47,60],[63,62],[36,56]].map(p=>`<div class="scal" style="left:${p[0]}%;top:${p[1]}%"></div>`).join('');
+const CURDS=[[50,50],[36,40],[63,38],[40,63],[61,63],[50,29],[28,54],[73,51],[49,73],[33,30],[68,72],[56,47],[43,48],[64,27]];
+const curds = n => CURDS.slice(0,n).map((p,i)=>`<div class="curd" style="left:${p[0]}%;top:${p[1]}%;--r:${(i*47)%90-45}deg"></div>`).join('');
+const BUBS=[[30,30],[60,25],[45,55],[70,60],[25,65],[50,80],[75,40],[35,45],[58,70],[20,45],[65,15],[42,20]];
+function pot(o={}){
+  let w='';
+  if(o.water){
+    w = `<div class="water">${BUBS.slice(0,o.bub||0).map((p,i)=>`<div class="bub" style="left:${p[0]}%;top:${p[1]}%;animation-delay:${(i*.23)%.9}s"></div>`).join('')}${o.inner||''}</div>`;
+  }
+  const steam = o.steam ? [22,45,68].map((x,i)=>`<div class="steam" style="left:${x}%;top:10%;animation-delay:${i*.6}s">💨</div>`).join('') : '';
+  return `<div class="ware"><div class="pot ${o.hot?'hot':''}">${w}${o.lid?'<div class="lid"><div class="knob"></div></div>':''}${steam}</div>${o.hot?'<div class="flames" style="right:0">🔥🔥🔥</div>':''}</div>`;
+}
+const shells = n => [[40,44,-20],[61,57,25]].slice(0,n).map(p=>`<div class="shell" style="left:${p[0]}%;top:${p[1]}%;--r:${p[2]}deg"></div>`).join('');
+function slices(t){ let s=''; for(let i=t;i<5;i++) s+=`<div class="slice" style="left:${i*20}%"></div>`; return s; }
+const plate = inner => `<div class="plate">${inner}</div>`;
+const friedLv = p => p<.35?'raw':p<.7?'half':p<.9?'full':'burnt';
+
+/* ---------- 四道菜 ---------- */
+const DISHES = {
+  scrambled:{
+    name:'炒蛋',
+    steps:[
+      {type:'drag', say:'把兩顆蛋拖進碗裡', tool:{icon:'🥚',label:'蛋'}, n:2, sfx:'crack'},
+      {type:'rub',  say:'用筷子在碗裡轉圈圈，攪一攪', tool:'🥢', label:'筷子', n:6, sfx:'stir'},
+      {type:'knob', say:'轉開爐火', sfx:'fire'},
+      {type:'drag', say:'把油倒進鍋子', tool:{icon:'🍶',label:'油'}, sfx:'sizzle'},
+      {type:'drag', say:'把蛋液倒進鍋子', tool:{icon:'🥣',label:'蛋液'}, sfx:'sizzle'},
+      {type:'rub',  say:'用鍋鏟翻一翻、炒一炒', tool:'🥄', label:'鍋鏟', n:6, sfx:'sizzle', need:300},
+      {type:'drag', say:'炒好了！把盤子拿過來裝', tool:{icon:'🍽️',label:'盤子'}, sfx:'pop'}
+    ],
+    draw(s,t){
+      switch(s){
+        case 0: return wrap(bowl(rawEggs(t)));
+        case 1: return wrap(bowl(rawEggs(2)+beaten(t/6)));
+        case 2: return pan();
+        case 3: return pan('',{hot:1});
+        case 4: return pan('',{hot:1,oil:1});
+        case 5: return pan(`<div class="liquid" style="opacity:${1-t/6}"></div>`+curds(Math.round(t/6*14)),{hot:1,oil:1});
+        default: return pan(curds(14),{hot:1,oil:1});
+      }
+    },
+    plate: () => plate(curds(14)),
+    result: () => ({stars:3, msg:'香噴噴的炒蛋完成了！'})
+  },
+
+  fried:{
+    name:'煎半熟蛋',
+    steps:[
+      {type:'knob', say:'轉開爐火', sfx:'fire'},
+      {type:'drag', say:'把油倒進鍋子', tool:{icon:'🍶',label:'油'}, sfx:'sizzle'},
+      {type:'drag', say:'把蛋拖進鍋子裡', tool:{icon:'🥚',label:'蛋'}, sfx:'crack'},
+      {type:'timing', say:'看好喔！跑到綠色星星的時候，按起鍋！', ms:9000}
+    ],
+    draw(s,t,p){
+      switch(s){
+        case 0: return pan();
+        case 1: return pan('',{hot:1});
+        case 2: return pan('',{hot:1,oil:1});
+        default: return pan(egg(friedLv(p)),{hot:1,oil:1});
+      }
+    },
+    plate: lv => plate(egg(lv||'half')),
+    result: p => {
+      const lv = friedLv(p);
+      return {
+        raw:  {lv, stars:1, msg:'蛋白還透明透明的，還沒熟喔！'},
+        half: {lv, stars:3, msg:'完美的半熟蛋！蛋黃會流出來喔！'},
+        full: {lv, stars:2, msg:'變成全熟蛋了，也很好吃！'},
+        burnt:{lv, stars:1, msg:'哎呀！燒焦了，黑黑的！'}
+      }[lv];
+    }
+  },
+
+  steamed:{
+    name:'蒸蛋',
+    steps:[
+      {type:'drag', say:'把兩顆蛋拖進碗裡', tool:{icon:'🥚',label:'蛋'}, n:2, sfx:'crack'},
+      {type:'rub',  say:'用筷子在碗裡轉圈圈，攪一攪', tool:'🥢', label:'筷子', n:5, sfx:'stir'},
+      {type:'drag', say:'倒一點水進碗裡', tool:{icon:'🫖',label:'水'}, n:2, sfx:'splash'},
+      {type:'drag', say:'鍋子裡的水滾了，把碗放進去', tool:{icon:'🥣',label:'蛋液'}, sfx:'pop'},
+      {type:'drag', say:'把鍋蓋蓋上去', tool:{html:'<div class="minilid"></div>',label:'鍋蓋'}, sfx:'pop'},
+      {type:'wait', say:'蒸蒸蒸，等一下下喔', ms:6000},
+      {type:'tap',  say:'蒸好了！點一下鍋蓋，打開看看', sfx:'pop'}
+    ],
+    draw(s,t){
+      const mix = bowl(beaten(1,'#ffe39a'),1);
+      switch(s){
+        case 0: return wrap(bowl(rawEggs(t)));
+        case 1: return wrap(bowl(rawEggs(2)+beaten(t/5)));
+        case 2: return wrap(bowl(beaten(1, t?'#ffe39a':'#ffc93c')));
+        case 3: return pot({water:1,bub:8,hot:1});
+        case 4: return pot({water:1,bub:8,hot:1,inner:mix});
+        case 5: return pot({water:1,bub:8,hot:1,inner:mix,lid:1,steam:1});
+        default: return t ? pot({water:1,bub:8,hot:1,inner:bowl(custard(),1),steam:1})
+                          : pot({water:1,bub:8,hot:1,inner:mix,lid:1,steam:1});
+      }
+    },
+    plate: () => plate(bowl(custard(),1)),
+    result: () => ({stars:3, msg:'滑滑嫩嫩的蒸蛋完成了！'})
+  },
+
+  boiled:{
+    name:'水煮蛋',
+    steps:[
+      {type:'drag', say:'把水倒進鍋子裡', tool:{icon:'🫖',label:'水'}, sfx:'splash'},
+      {type:'knob', say:'轉開爐火', sfx:'fire'},
+      {type:'wait', say:'等水滾，咕嚕咕嚕', ms:4000},
+      {type:'drag', say:'水滾了！把兩顆蛋放進去', tool:{icon:'🥚',label:'蛋'}, n:2, sfx:'splash'},
+      {type:'wait', say:'煮煮煮，等一下下喔', ms:6000},
+      {type:'drag', say:'煮好了！用湯匙把蛋撈起來', tool:{icon:'🥄',label:'湯匙'}, sfx:'splash'},
+      {type:'rub',  say:'用手指在蛋上搓一搓，把蛋殼剝掉', tool:'👆', label:'手指', n:5, sfx:'crack', need:260}
+    ],
+    draw(s,t,p){
+      switch(s){
+        case 0: return pot();
+        case 1: return pot({water:1});
+        case 2: return pot({water:1,hot:1,bub:Math.round(p*12)});
+        case 3: return pot({water:1,hot:1,bub:12,inner:shells(t)});
+        case 4: return pot({water:1,hot:1,bub:12,inner:shells(2)});
+        case 5: return t ? wrap(`<div class="board"><div class="bigegg">${slices(0)}</div></div>`)
+                         : pot({water:1,hot:1,bub:12,inner:shells(2)});
+        default: return wrap(`<div class="board"><div class="bigegg">${slices(t)}</div></div>`);
+      }
+    },
+    plate: () => plate(`<div class="bhalf" style="left:37%;top:50%;--r:-14deg"></div><div class="bhalf" style="left:63%;top:50%;--r:14deg"></div>`),
+    result: () => ({stars:3, msg:'剝好殼的水煮蛋完成了！'})
+  }
+};
+
+/* ---------- 遊戲流程 ---------- */
+let D, did, s, t, busy=false, raf=0, curP=0;
+
+function show(id){ document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('on', e.id===id)); }
+function getBest(){ try{ return JSON.parse(localStorage.eggBest||'{}'); }catch(e){ return {}; } }
+
+function home(){
+  cancelAnimationFrame(raf); busy=false; $('#cursorTool').style.display='none';
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  const best=getBest();
+  $('#cards').innerHTML = Object.entries(DISHES).map(([id,d])=>
+    `<div class="card" data-id="${id}"><div class="mini">${d.plate()}</div>${d.name}<div class="best">${best[id]?'⭐'.repeat(best[id]):'還沒煮過'}</div></div>`).join('');
+  document.querySelectorAll('.card').forEach(c=>c.onclick=()=>start(c.dataset.id));
+  show('menu');
+}
+
+function start(id){
+  audio(); cancelAnimationFrame(raf);
+  D=DISHES[id]; did=id; s=0; t=0; busy=false;
+  $('#dishName').textContent = '🍳 ' + D.name;
+  show('cook'); step();
+}
+
+const HINTS = {
+  drag:  '👆 用滑鼠按住下面的東西，拖到鍋碗上！',
+  rub:   '👆 按住滑鼠，在上面轉圈圈！',
+  knob:  '👆 按住旋鈕，往右邊拉！',
+  tap:   '👆 用滑鼠點一下！',
+  wait:  '⏳ 等一下下…',
+  timing:''
+};
+
+function draw(p=0, bump=false){
+  $('#stage').innerHTML = D.draw(s,t,p);
+  const st=D.steps[s], n=st.n||1;
+  $('#dots').textContent = (n>1 && st.type!=='wait' && st.type!=='timing') ? '●'.repeat(t)+'○'.repeat(n-t) : '';
+  if(bump){ const w=$('#stage').firstElementChild; if(w) w.classList.add('bump'); }
+}
+
+function step(){
+  const st=D.steps[s], stage=$('#stage');
+  $('#say').textContent = st.say; say(st.say);
+  $('#meter').style.display  = st.type==='timing' ? 'flex' : 'none';
+  $('#wait').style.display   = st.type==='wait' ? 'block' : 'none';
+  $('#action').style.display = st.type==='timing' ? 'block' : 'none';
+  $('#hint').textContent = st.hint || HINTS[st.type] || '';
+  stage.classList.toggle('rubbing', st.type==='rub');
+  stage.classList.toggle('tappable', st.type==='tap');
+  stage.classList.remove('active');
+  rubDist=0; rubbing=false;
+  if(st.type!=='rub') $('#cursorTool').style.display='none';
+  draw(); buildTray();
+  if(st.type==='wait') runWait(st.ms);
+  if(st.type==='timing') runTiming(st.ms);
+}
+
+function next(){
+  s++; t=0; busy=false;
+  if(s>=D.steps.length) finish(D.result()); else step();
+}
+
+/* 完成一個小動作 */
+function success(){
+  const st=D.steps[s], n=st.n||1;
+  (SFX[st.sfx]||SFX.pop)();
+  t++; draw(0,true);
+  if(t>=n){ busy=true; $('#tray').innerHTML=''; $('#stage').classList.remove('tappable'); setTimeout(next,650); }
+  else if(st.type==='drag') buildTray();
+}
+
+/* 下面的托盤：要拖的東西、旋鈕 */
+function buildTray(){
+  const st=D.steps[s], tr=$('#tray');
+  if(st.type==='drag'){
+    let h='';
+    for(let i=t;i<(st.n||1);i++) h+=`<div class="tool"><span class="ico">${st.tool.html||st.tool.icon}</span><b>${st.tool.label}</b></div>`;
+    tr.innerHTML=h;
+    tr.querySelectorAll('.tool').forEach(el=>el.addEventListener('pointerdown',startDrag));
+  } else if(st.type==='knob'){
+    tr.innerHTML=`<div class="knob-ctl" id="knob"><div class="dial"></div><b>爐火 ➡️</b></div>`;
+    $('#knob').addEventListener('pointerdown',startKnob);
+  } else if(st.type==='rub'){
+    tr.innerHTML=`<div class="tool still"><span class="ico">${st.tool}</span><b>${st.label}</b></div>`;
+  } else tr.innerHTML='';
+}
+
+/* 是否放在鍋子/碗上（範圍放寬一點，小朋友比較好放） */
+function hitTarget(x,y){
+  const w=$('#stage .ware'); if(!w) return false;
+  const r=(w.firstElementChild||w).getBoundingClientRect(), m=45;
+  return x>r.left-m && x<r.right+m && y>r.top-m && y<r.bottom+m;
+}
+
+/* 拖曳 */
+function startDrag(e){
+  if(busy) return;
+  e.preventDefault(); audio();
+  const src=e.currentTarget, r=src.getBoundingClientRect();
+  const ox=e.clientX-r.left, oy=e.clientY-r.top;
+  const ghost=src.cloneNode(true); ghost.classList.add('ghost');
+  ghost.style.left=r.left+'px'; ghost.style.top=r.top+'px';
+  document.body.appendChild(ghost);
+  src.style.visibility='hidden';
+  SFX.pick();
+  const move=ev=>{
+    ghost.style.left=ev.clientX-ox+'px'; ghost.style.top=ev.clientY-oy+'px';
+    const w=$('#stage .ware'); if(w) w.classList.toggle('over', hitTarget(ev.clientX,ev.clientY));
+  };
+  const up=ev=>{
+    window.removeEventListener('pointermove',move);
+    window.removeEventListener('pointerup',up);
+    window.removeEventListener('pointercancel',up);
+    const w=$('#stage .ware'); if(w) w.classList.remove('over');
+    if(!busy && hitTarget(ev.clientX,ev.clientY)){ ghost.remove(); success(); }
+    else {
+      ghost.style.transition='left .3s, top .3s';
+      ghost.style.left=r.left+'px'; ghost.style.top=r.top+'px';
+      setTimeout(()=>{ ghost.remove(); src.style.visibility=''; },320);
+    }
+  };
+  window.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',up);
+  window.addEventListener('pointercancel',up);
+}
+
+/* 爐火旋鈕：按住往右拉 */
+function startKnob(e){
+  if(busy) return;
+  e.preventDefault(); audio();
+  const knob=$('#knob'), dial=knob.querySelector('.dial'), x0=e.clientX, y0=e.clientY;
+  knob.classList.add('on'); dial.style.transition='';
+  let lastClick=0;
+  const end=()=>{
+    window.removeEventListener('pointermove',move);
+    window.removeEventListener('pointerup',up);
+    window.removeEventListener('pointercancel',up);
+  };
+  const move=ev=>{
+    const rot=Math.max(0,Math.min(180,(ev.clientX-x0)*1.4+(y0-ev.clientY)*0.4));
+    dial.style.transform=`rotate(${rot}deg)`;
+    if(rot-lastClick>30){ lastClick=rot; tone(1800,1500,.03,'square',.08); }
+    if(rot>=150){ end(); dial.style.transform='rotate(180deg)'; success(); }
+  };
+  const up=()=>{ end(); knob.classList.remove('on'); dial.style.transition='transform .3s'; dial.style.transform='rotate(0deg)'; };
+  window.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',up);
+  window.addEventListener('pointercancel',up);
+}
+
+/* 轉圈圈 / 搓一搓 / 點一下 */
+let rubbing=false, rubDist=0, lastX=0, lastY=0, sndDist=0;
+(function(){
+  const stage=$('#stage'), cur=$('#cursorTool');
+  const cs=()=>D && $('#cook').classList.contains('on') ? D.steps[s] : null;
+  const endRub=()=>{ rubbing=false; cur.classList.remove('down'); stage.classList.remove('active'); };
+  stage.addEventListener('pointerdown',e=>{
+    const k=cs(); if(!k || busy) return;
+    audio();
+    if(k.type==='tap' && hitTarget(e.clientX,e.clientY)){ success(); return; }
+    if(k.type==='rub'){
+      rubbing=true; lastX=e.clientX; lastY=e.clientY;
+      stage.setPointerCapture(e.pointerId);
+      cur.classList.add('down'); stage.classList.add('active');
+    }
+  });
+  stage.addEventListener('pointermove',e=>{
+    const k=cs();
+    if(!k || k.type!=='rub'){ cur.style.display='none'; return; }
+    cur.textContent=k.tool; cur.style.display='block';
+    cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px';
+    if(!rubbing || busy) return;
+    const d=Math.hypot(e.clientX-lastX, e.clientY-lastY);
+    lastX=e.clientX; lastY=e.clientY;
+    if(!hitTarget(e.clientX,e.clientY)) return;
+    rubDist+=d; sndDist+=d;
+    if(sndDist>170){ sndDist=0; (SFX[k.sfx]||SFX.stir)(); }
+    const n=k.n||1, nt=Math.min(n, Math.floor(rubDist/(k.need||350)));
+    if(nt>t){
+      t=nt; draw();
+      if(t>=n){ busy=true; endRub(); SFX.pop(); $('#tray').innerHTML=''; setTimeout(next,650); }
+    }
+  });
+  stage.addEventListener('pointerup',endRub);
+  stage.addEventListener('pointercancel',endRub);
+  stage.addEventListener('pointerleave',()=>{ if(!rubbing) cur.style.display='none'; });
+})();
+
+function runWait(ms){
+  const t0=performance.now(), bar=$('#wait>div'); let lastQ=-1;
+  const loop=now=>{
+    const p=Math.min(1,(now-t0)/ms);
+    bar.style.width = p*100+'%';
+    const q=Math.floor(p*6);
+    if(q!==lastQ){ lastQ=q; draw(p); if(q%2===0 && q<6) SFX.splash(); }
+    if(p<1) raf=requestAnimationFrame(loop); else { SFX.pop(); next(); }
+  };
+  raf=requestAnimationFrame(loop);
+}
+
+function runTiming(ms){
+  const t0=performance.now(), nd=$('#needle'); let lastLv='', lastSz=0;
+  const loop=now=>{
+    curP=Math.min(1,(now-t0)/ms);
+    nd.style.left=`calc(${curP*100}% - 4px)`;
+    const lv=friedLv(curP);
+    if(lv!==lastLv){ lastLv=lv; draw(curP); }
+    if(now-lastSz>900){ lastSz=now; lv==='burnt'?SFX.sad():SFX.sizzle(); }
+    if(curP<1) raf=requestAnimationFrame(loop);
+    else { busy=true; finish(D.result(1)); }
+  };
+  raf=requestAnimationFrame(loop);
+}
+
+$('#action').onclick=()=>{
+  const st=D.steps[s];
+  if(busy || st.type!=='timing') return;
+  cancelAnimationFrame(raf); busy=true; finish(D.result(curP));
+};
+
+function confetti(){
+  for(let i=0;i<24;i++){
+    const e=document.createElement('span');
+    e.className='conf'; e.textContent=['⭐','🎉','✨','🥚','💛'][i%5];
+    e.style.left=Math.random()*100+'vw'; e.style.animationDelay=Math.random()*.8+'s';
+    document.body.appendChild(e); setTimeout(()=>e.remove(),3800);
+  }
+}
+
+/* ---------- 餵小貓咪 ---------- */
+let lastR=null, fed=false, plateDX=0, plateDY=0;
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+function setCat(face, text){
+  const MOOD={'🐱':'idle','😺':'smell','😸':'chew','😻':'love','😽':'happy'};
+  $('#cat').dataset.mood = MOOD[face] || 'idle';
+  const b=$('#bubble'); b.textContent = text||''; b.style.display = text ? 'block' : 'none';
+}
+function hearts(n){
+  const box=$('#catbox');
+  for(let i=0;i<n;i++){
+    const h=document.createElement('span');
+    h.className='heart'; h.textContent=['💕','💖','💗','✨','💞'][i%5];
+    h.style.left=(i%2?150:10)+Math.random()*90+'px'; h.style.top=-10+Math.random()*80+'px';
+    h.style.animationDelay=(i*.12)+'s';
+    box.appendChild(h); setTimeout(()=>h.remove(),2400);
+  }
+}
+function placePlate(dx,dy,scale=1,anim=false){
+  plateDX=dx; plateDY=dy;
+  const fp=$('#feedPlate');
+  fp.style.transition = anim ? 'transform .35s' : 'none';
+  fp.style.transform = `translate(${dx}px,${dy}px) scale(${scale})`;
+}
+
+function finish(r){
+  busy=false; lastR=r; fed=false; show('done');
+  const fp=$('#feedPlate');
+  fp.innerHTML = D.plate(r.lv);
+  placePlate(0,0); fp.classList.add('wiggle'); fp.style.pointerEvents='';
+  $('#cat').className=''; setCat('🐱','肚子好餓喔～');
+  $('#feedSay').textContent = D.name + '做好了！拿給小貓咪吃吧！';
+  $('#feedHint').style.display='block';
+  $('#result').style.display='none';
+  const best=getBest(); best[did]=Math.max(best[did]||0, r.stars);
+  try{ localStorage.eggBest=JSON.stringify(best); }catch(e){}
+  SFX.ding();
+  say($('#feedSay').textContent);
+}
+
+function catHit(x,y){
+  const r=$('#cat').getBoundingClientRect(), m=50;
+  return x>r.left-m && x<r.right+m && y>r.top-m && y<r.bottom+m;
+}
+
+$('#feedPlate').addEventListener('pointerdown',e=>{
+  if(fed) return;
+  e.preventDefault(); audio();
+  const fp=$('#feedPlate'), x0=e.clientX, y0=e.clientY;
+  fp.setPointerCapture(e.pointerId);
+  fp.classList.remove('wiggle'); fp.classList.add('dragging');
+  SFX.pick();
+  let wasOver=false;
+  const move=ev=>{
+    placePlate(ev.clientX-x0, ev.clientY-y0, 1.05);
+    const over=catHit(ev.clientX,ev.clientY);
+    $('#catbox').classList.toggle('over',over);
+    if(over!==wasOver){ wasOver=over; over ? (setCat('😺','喵～好香喔！'), SFX.meow()) : setCat('🐱','肚子好餓喔～'); }
+  };
+  const up=ev=>{
+    fp.removeEventListener('pointermove',move);
+    fp.removeEventListener('pointerup',up);
+    fp.removeEventListener('pointercancel',up);
+    fp.classList.remove('dragging');
+    $('#catbox').classList.remove('over');
+    if(catHit(ev.clientX,ev.clientY)) eat();
+    else { placePlate(0,0,1,true); setTimeout(()=>{ if(!fed) fp.classList.add('wiggle'); },360); setCat('🐱','肚子好餓喔～'); }
+  };
+  fp.addEventListener('pointermove',move);
+  fp.addEventListener('pointerup',up);
+  fp.addEventListener('pointercancel',up);
+});
+
+async function eat(){
+  fed=true;
+  const fp=$('#feedPlate'), cat=$('#cat'), r=lastR;
+  fp.style.pointerEvents='none';
+  $('#feedHint').style.display='none';
+  // 把盤子放到貓咪前面
+  const pr=fp.getBoundingClientRect(), cr=$('#catbox').getBoundingClientRect();
+  const tx=cr.left+cr.width/2-95, ty=cr.bottom-15;
+  placePlate(plateDX+(tx-(pr.left+pr.width/2)), plateDY+(ty-(pr.top+pr.height/2)), .5, true);
+  setCat('😺','開動囉！'); SFX.meow();
+  await sleep(500);
+  cat.classList.add('chew'); setCat('😸','嚼嚼嚼…');
+  const parts=fp.querySelectorAll('.plate > *');
+  for(let k=1;k<=4;k++){
+    SFX.munch();
+    parts.forEach(p=>{ p.style.transition='opacity .3s'; p.style.opacity=1-k/4; });
+    await sleep(480);
+  }
+  cat.classList.remove('chew');
+  const line = r.stars>=2 ? '好好吃！謝謝你！'
+             : r.lv==='burnt' ? '有點苦苦的…還是謝謝你！'
+             : '軟軟的好特別！謝謝你！';
+  setCat('😻', line);
+  cat.classList.add('happy');
+  SFX.purr(); setTimeout(SFX.meow,300); hearts(10);
+  $('#feedSay').textContent = '小貓咪吃飽了，好開心！';
+  say('喵～' + line);
+  await sleep(1500);
+  cat.classList.remove('happy');
+  $('#stars').textContent = '⭐'.repeat(r.stars) + '☆'.repeat(3-r.stars);
+  $('#msg').textContent = r.msg;
+  $('#result').style.display='block';
+  confetti();
+}
+
+/* 摸摸小貓咪 */
+$('#cat').addEventListener('click',()=>{
+  audio();
+  if(!fed){ setCat('🐱','喵？我肚子餓了～'); SFX.meow(); return; }
+  const lines=['呼嚕呼嚕～','喵～最喜歡你了！','再摸摸我～','明天也要煮給我吃喔！'];
+  const cat=$('#cat');
+  setCat(['😻','😽','😸'][Math.random()*3|0], lines[Math.random()*lines.length|0]);
+  cat.classList.remove('happy'); void cat.offsetWidth; cat.classList.add('happy');
+  hearts(5); SFX.meow(); SFX.purr();
+});
+
+$('#again').onclick=()=>start(did);
+$('#other').onclick=home;
+$('#homeBtn').onclick=home;
+$('#say').onclick=()=>say($('#say').textContent);
+$('#voice').onclick=()=>{ voiceOn=!voiceOn; $('#voice').textContent=voiceOn?'🔊':'🔇'; if(!voiceOn&&window.speechSynthesis) speechSynthesis.cancel(); };
+if(window.speechSynthesis) speechSynthesis.getVoices();
+home();
+</script>
+</body>
+</html>
