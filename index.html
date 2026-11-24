@@ -185,7 +185,7 @@ h1{margin:0;font-size:36px;color:#e8743b;text-shadow:3px 3px 0 #fff}
 .ware.over>:first-child{outline:7px dashed #5fc98a;outline-offset:12px}
 .minilid{width:66px;height:66px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#cdd9e0 60%,#98aab4);border:4px solid #8a9ba5;position:relative}
 .minilid::after{content:"";position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px;border-radius:50%;background:#5a3d2b}
-.knob-ctl{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:grab;touch-action:none}
+.knob-ctl{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;touch-action:none}
 .knob-ctl b{font-size:20px}
 .dial{width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#cfcfcf);border:6px solid #777;position:relative;box-shadow:0 5px 0 #555}
 .dial::after{content:"";position:absolute;left:50%;top:6px;width:14px;height:36px;margin-left:-7px;background:#e53935;border-radius:7px}
@@ -393,7 +393,7 @@ const DISHES = {
     steps:[
       {type:'drag', say:'把兩顆蛋拖進碗裡', tool:{icon:'🥚',label:'蛋'}, n:2, sfx:'crack'},
       {type:'rub',  say:'用筷子在碗裡轉圈圈，攪一攪', tool:'🥢', label:'筷子', n:6, sfx:'stir'},
-      {type:'knob', say:'轉開爐火', sfx:'fire'},
+      {type:'knob', say:'點一下旋鈕，打開爐火', sfx:'fire'},
       {type:'drag', say:'把油倒進鍋子', tool:{icon:'🍶',label:'油'}, sfx:'sizzle'},
       {type:'drag', say:'把蛋液倒進鍋子', tool:{icon:'🥣',label:'蛋液'}, sfx:'sizzle'},
       {type:'rub',  say:'用鍋鏟翻一翻、炒一炒', tool:'🥄', label:'鍋鏟', n:6, sfx:'sizzle', need:300},
@@ -417,7 +417,7 @@ const DISHES = {
   fried:{
     name:'煎半熟蛋',
     steps:[
-      {type:'knob', say:'轉開爐火', sfx:'fire'},
+      {type:'knob', say:'點一下旋鈕，打開爐火', sfx:'fire'},
       {type:'drag', say:'把油倒進鍋子', tool:{icon:'🍶',label:'油'}, sfx:'sizzle'},
       {type:'drag', say:'把蛋拖進鍋子裡', tool:{icon:'🥚',label:'蛋'}, sfx:'crack'},
       {type:'timing', say:'看好喔！跑到綠色星星的時候，按起鍋！', ms:9000}
@@ -474,7 +474,7 @@ const DISHES = {
     name:'水煮蛋',
     steps:[
       {type:'drag', say:'把水倒進鍋子裡', tool:{icon:'🫖',label:'水'}, sfx:'splash'},
-      {type:'knob', say:'轉開爐火', sfx:'fire'},
+      {type:'knob', say:'點一下旋鈕，打開爐火', sfx:'fire'},
       {type:'wait', say:'等水滾，咕嚕咕嚕', ms:4000},
       {type:'drag', say:'水滾了！把兩顆蛋放進去', tool:{icon:'🥚',label:'蛋'}, n:2, sfx:'splash'},
       {type:'wait', say:'煮煮煮，等一下下喔', ms:6000},
@@ -524,7 +524,7 @@ function start(id){
 const HINTS = {
   drag:  '👆 用滑鼠按住下面的東西，拖到鍋碗上！',
   rub:   '👆 按住滑鼠，在上面轉圈圈！',
-  knob:  '👆 按住旋鈕，往右邊拉！',
+  knob:  '👆 點一下旋鈕，就會開火！',
   tap:   '👆 用滑鼠點一下！',
   wait:  '⏳ 等一下下…',
   timing:''
@@ -577,7 +577,7 @@ function buildTray(){
     tr.innerHTML=h;
     tr.querySelectorAll('.tool').forEach(el=>el.addEventListener('pointerdown',startDrag));
   } else if(st.type==='knob'){
-    tr.innerHTML=`<div class="knob-ctl" id="knob"><div class="dial"></div><b>爐火 ➡️</b></div>`;
+    tr.innerHTML=`<div class="knob-ctl" id="knob"><div class="dial"></div><b>點我開火</b></div>`;
     $('#knob').addEventListener('pointerdown',startKnob);
   } else if(st.type==='rub'){
     tr.innerHTML=`<div class="tool still"><span class="ico">${st.tool}</span><b>${st.label}</b></div>`;
@@ -623,28 +623,15 @@ function startDrag(e){
   window.addEventListener('pointercancel',up);
 }
 
-/* 爐火旋鈕：按住往右拉 */
+/* 爐火旋鈕：點一下就開火（旋鈕自己轉過去） */
 function startKnob(e){
   if(busy) return;
   e.preventDefault(); audio();
-  const knob=$('#knob'), dial=knob.querySelector('.dial'), x0=e.clientX, y0=e.clientY;
-  knob.classList.add('on'); dial.style.transition='';
-  let lastClick=0;
-  const end=()=>{
-    window.removeEventListener('pointermove',move);
-    window.removeEventListener('pointerup',up);
-    window.removeEventListener('pointercancel',up);
-  };
-  const move=ev=>{
-    const rot=Math.max(0,Math.min(180,(ev.clientX-x0)*1.4+(y0-ev.clientY)*0.4));
-    dial.style.transform=`rotate(${rot}deg)`;
-    if(rot-lastClick>30){ lastClick=rot; tone(1800,1500,.03,'square',.08); }
-    if(rot>=150){ end(); dial.style.transform='rotate(180deg)'; success(); }
-  };
-  const up=()=>{ end(); knob.classList.remove('on'); dial.style.transition='transform .3s'; dial.style.transform='rotate(0deg)'; };
-  window.addEventListener('pointermove',move);
-  window.addEventListener('pointerup',up);
-  window.addEventListener('pointercancel',up);
+  const knob=$('#knob'), dial=knob.querySelector('.dial');
+  knob.classList.add('on');
+  dial.style.transition='transform .35s'; dial.style.transform='rotate(180deg)';
+  [0,90,180].forEach(d=>tone(1800,1500,.03,'square',.08,d/1000));
+  success();
 }
 
 /* 轉圈圈 / 搓一搓 / 點一下 */
