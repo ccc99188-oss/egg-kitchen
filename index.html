@@ -677,7 +677,7 @@ function home(){
   if(window.speechSynthesis) speechSynthesis.cancel();
   const best=getBest();
   $('#cards').innerHTML = Object.entries(DISHES).map(([id,d])=>
-    `<div class="card" data-id="${id}"><div class="mini">${d.plate()}</div>${d.name}<div class="best">${best[id]?'⭐'.repeat(best[id]):'還沒煮過'}</div></div>`).join('');
+    `<div class="card" data-id="${id}"><div class="mini">${d.plate()}</div>${d.name}<div class="best">${best[id]?'⭐'.repeat(best[id]):'還沒做過'}</div></div>`).join('');
   document.querySelectorAll('.card').forEach(c=>c.onclick=()=>start(c.dataset.id));
   show('menu');
 }
